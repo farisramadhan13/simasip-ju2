@@ -1,65 +1,144 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
 
 export default function Home() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute("data-theme", savedTheme);
+    } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setTheme("dark");
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <nav className="navbar">
+        <div className="container navbar-content">
+          <div className="logo">
+            <span className="logo-highlight">SIMASIP</span> JU 2
+          </div>
+          <div className="nav-actions">
+            <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle Theme">
+              {mounted && (theme === "light" ? "🌙" : "☀️")}
+            </button>
+            <a href="/login" className="btn-primary">
+              Login Sistem
+            </a>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </nav>
+
+      <main>
+        <section className="hero">
+          <div className="hero-bg-blob"></div>
+          <div className="hero-bg-blob-2"></div>
+          <div className="container">
+            <div className="hero-content">
+              <div className="badge">
+                <span className="badge-dot"></span>
+                Suku Dinas Pendidikan Wilayah II Jakarta Utara
+              </div>
+              <h1 className="hero-title">
+                Sistem Manajemen Arsip <br />
+                <span className="text-gradient">Terintegrasi & Aman</span>
+              </h1>
+              <p className="hero-description">
+                Platform digital resmi untuk pengelolaan, penyimpanan, dan pencarian dokumen arsip Suku Dinas Pendidikan Wilayah II Kota Administrasi Jakarta Utara.
+              </p>
+              <div className="hero-actions">
+                <a href="#features" className="btn-primary">
+                  Pelajari Lebih Lanjut
+                </a>
+                <a href="#panduan" className="btn-secondary">
+                  Buku Panduan
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="features">
+          <div className="container">
+            <div className="section-header">
+              <h2 className="section-title">Fitur Unggulan</h2>
+              <p className="section-subtitle">
+                Kemudahan dalam mengelola arsip digital dengan teknologi terkini yang aman, cepat, dan responsif.
+              </p>
+            </div>
+            
+            <div className="features-grid">
+              <div className="feature-card">
+                <div className="feature-icon">📁</div>
+                <h3 className="feature-title">Penyimpanan Terpusat</h3>
+                <p className="feature-desc">
+                  Simpan seluruh dokumen arsip dalam satu sistem terpusat yang mudah diakses kapan saja dan di mana saja.
+                </p>
+              </div>
+              <div className="feature-card">
+                <div className="feature-icon">🔍</div>
+                <h3 className="feature-title">Pencarian Cepat</h3>
+                <p className="feature-desc">
+                  Temukan dokumen yang Anda butuhkan dalam hitungan detik dengan fitur pencarian yang akurat dan efisien.
+                </p>
+              </div>
+              <div className="feature-card">
+                <div className="feature-icon">🔒</div>
+                <h3 className="feature-title">Keamanan Terjamin</h3>
+                <p className="feature-desc">
+                  Dilengkapi dengan sistem keamanan berlapis untuk melindungi data dan dokumen penting Anda dari akses yang tidak sah.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
-    </div>
+
+      <footer className="footer">
+        <div className="container">
+          <div className="footer-top">
+            <div className="footer-brand">
+              <div className="logo">
+                <span className="logo-highlight">SIMASIP</span> JU 2
+              </div>
+              <p className="footer-desc">
+                Sistem Manajemen Arsip Suku Dinas Pendidikan Wilayah II Kota Administrasi Jakarta Utara. Mewujudkan administrasi digital yang efektif dan transparan.
+              </p>
+            </div>
+            
+            <div className="footer-links-group">
+              <div className="footer-links-title">Tautan Penting</div>
+              <a href="#" className="footer-link">Portal Resmi</a>
+              <a href="#" className="footer-link">Panduan Pengguna</a>
+              <a href="#" className="footer-link">FAQ</a>
+            </div>
+            
+            <div className="footer-links-group">
+              <div className="footer-links-title">Kontak</div>
+              <a href="#" className="footer-link">Bantuan Teknis</a>
+              <a href="#" className="footer-link">Hubungi Kami</a>
+            </div>
+          </div>
+          
+          <div className="footer-bottom">
+            &copy; {new Date().getFullYear()} Suku Dinas Pendidikan Wilayah II Kota Administrasi Jakarta Utara. All rights reserved.
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }
