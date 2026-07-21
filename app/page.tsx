@@ -80,7 +80,7 @@ export default function Home() {
                 Kemudahan dalam mengelola arsip digital dengan teknologi terkini yang aman, cepat, dan responsif.
               </p>
             </div>
-            
+
             <div className="features-grid">
               <div className="feature-card">
                 <div className="feature-icon">📁</div>
@@ -97,10 +97,10 @@ export default function Home() {
                 </p>
               </div>
               <div className="feature-card">
-                <div className="feature-icon">🔒</div>
-                <h3 className="feature-title">Keamanan Terjamin</h3>
+                <div className="feature-icon">📊</div>
+                <h3 className="feature-title">Monitoring Surat</h3>
                 <p className="feature-desc">
-                  Dilengkapi dengan sistem keamanan berlapis untuk melindungi data dan dokumen penting Anda dari akses yang tidak sah.
+                  Pantau status surat masuk, keluar, dan disposisi secara langsung dengan pembaruan data yang cepat dan transparan.
                 </p>
               </div>
             </div>
@@ -119,21 +119,21 @@ export default function Home() {
                 Sistem Manajemen Arsip Suku Dinas Pendidikan Wilayah II Kota Administrasi Jakarta Utara. Mewujudkan administrasi digital yang efektif dan transparan.
               </p>
             </div>
-            
+
             <div className="footer-links-group">
               <div className="footer-links-title">Tautan Penting</div>
               <a href="#" className="footer-link">Portal Resmi</a>
               <a href="#" className="footer-link">Panduan Pengguna</a>
               <a href="#" className="footer-link">FAQ</a>
             </div>
-            
+
             <div className="footer-links-group">
               <div className="footer-links-title">Kontak</div>
               <a href="#" className="footer-link">Bantuan Teknis</a>
               <a href="#" className="footer-link">Hubungi Kami</a>
             </div>
           </div>
-          
+
           <div className="footer-bottom">
             &copy; {new Date().getFullYear()} Suku Dinas Pendidikan Wilayah II Kota Administrasi Jakarta Utara. All rights reserved.
           </div>

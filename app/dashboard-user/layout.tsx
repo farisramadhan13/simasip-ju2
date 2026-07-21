@@ -51,6 +51,18 @@ export default function DashboardUserLayout({
             <span className="nav-item-icon">📁</span>
             Arsip Saya
           </Link>
+          <Link href="/dashboard-user/surat-masuk" className={`nav-item ${pathname?.includes('/surat-masuk') ? 'active' : ''}`}>
+            <span className="nav-item-icon">📥</span>
+            Surat Masuk
+          </Link>
+          <Link href="/dashboard-user/surat-keluar" className={`nav-item ${pathname?.includes('/surat-keluar') ? 'active' : ''}`}>
+            <span className="nav-item-icon">📤</span>
+            Surat Keluar
+          </Link>
+          <Link href="/dashboard-user/disposisi" className={`nav-item ${pathname?.includes('/disposisi') ? 'active' : ''}`}>
+            <span className="nav-item-icon">📋</span>
+            Disposisi
+          </Link>
         </nav>
       </aside>
 
