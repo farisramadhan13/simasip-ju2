@@ -4,14 +4,14 @@ import bcrypt from "bcrypt";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
   }
 
-  const { id } = params;
+  const { id } = await context.params;
 
   try {
     const data = await req.json();
@@ -46,14 +46,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
   }
 
-  const { id } = params;
+  const { id } = await context.params;
 
   if (session.user.id === id) {
     return NextResponse.json({ message: "Anda tidak dapat menghapus akun Anda sendiri" }, { status: 400 });
