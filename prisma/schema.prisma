@@ -20,3 +20,67 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Disposisi {
+  id                  String    @id @default(cuid())
+  nomorUrut           String
+  tanggalPenerimaan   DateTime
+  nomorSurat          String
+  tanggalSurat        DateTime
+  sasaran             String
+  perihal             String
+  fileSuratUrl        String?
+  fileDisposisiUrl    String?
+  bidangPengelola     String
+  tanggalDisposisi    DateTime?
+  disposisiPimpinan   String?
+  tanggalMasukSeksi   DateTime?
+  nomorUrutSeksi      String?
+  petugas             String?
+  keterangan          String?
+  status              String    @default("belum diproses")
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model SuratMasuk {
+  id                  String    @id @default(cuid())
+  nomorUrut           String
+  tanggalPenerimaan   DateTime
+  nomorSurat          String
+  tanggalSurat        DateTime
+  sasaran             String
+  perihal             String
+  fileSuratUrl        String?
+  fileDisposisiUrl    String?
+  bidangPengelola     String
+  tanggalDisposisi    DateTime?
+  disposisiPimpinan   String?
+  tanggalMasukSeksi   DateTime?
+  nomorUrutSeksi      String?
+  petugas             String?
+  keterangan          String?
+  catatan             String    @default("-") // Hadir/Wakili, TL Sesuai Ketentuan, dll.
+  status              String    @default("Menunggu Disposisi") // Menunggu Disposisi, Proses Pengerjaan, dll.
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model SuratKeluar {
+  id                  String    @id @default(cuid())
+  nomorUrut           String
+  tanggalKeluar       DateTime
+  nomorSurat          String
+  perihal             String
+  ditujukan           String
+  tembusan            String?
+  keterangan          String?
+  fileSuratUrl        String?
+  petugas             String
+  status              String    @default("Draft")
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
