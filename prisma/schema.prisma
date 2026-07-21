@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Vercel/Neon Postgres requires you to use the connection string from your dashboard
+  url = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING") // Used for migrations if needed
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String   // Nama
+  position  String   // Jabatan
+  unit      String   // Unit Kerja
+  email     String   @unique
+  password  String   // Akan disimpan dalam bentuk hash (misal: bcrypt)
+  role      String   @default("user") // "admin" atau "user"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

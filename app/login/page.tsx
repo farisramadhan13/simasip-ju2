@@ -2,17 +2,51 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { signIn, getSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  // Simple check to ensure we only render full content after hydration if needed,
-  // but since we are not heavily relying on theme for layout shifts here, we can just render.
   const [mounted, setMounted] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (res?.error) {
+        setError(res.error);
+      } else {
+        const session = await getSession();
+        if (session?.user?.role === "admin") {
+          router.push("/dashboard");
+        } else {
+          router.push("/dashboard-user");
+        }
+      }
+    } catch (err) {
+      setError("Terjadi kesalahan sistem, silakan coba lagi nanti.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="login-container">
@@ -27,15 +61,23 @@ export default function LoginPage() {
             <p>Silakan masuk ke akun Anda untuk melanjutkan.</p>
           </div>
 
-          <form onSubmit={(e) => e.preventDefault()}>
+          {error && (
+            <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label" htmlFor="username">Username atau Email</label>
+              <label className="form-label" htmlFor="email">Email / ID Pengguna</label>
               <input 
                 type="text" 
-                id="username" 
+                id="email" 
                 className="form-input" 
-                placeholder="Masukkan username Anda" 
+                placeholder="Masukkan email Anda" 
                 required 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             
@@ -47,6 +89,8 @@ export default function LoginPage() {
                 className="form-input" 
                 placeholder="Masukkan password Anda" 
                 required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             
@@ -58,8 +102,15 @@ export default function LoginPage() {
               <a href="#" className="footer-link">Lupa password?</a>
             </div>
             
-            <button type="submit" className="btn-primary btn-full">
-              Masuk
+            <button type="submit" className={`btn-primary btn-full ${isLoading ? 'btn-loading' : ''}`} disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <div className="spinner spinner-small" style={{ borderLeftColor: '#fff' }}></div>
+                  <span>Memproses...</span>
+                </>
+              ) : (
+                "Masuk"
+              )}
             </button>
           </form>
         </div>
