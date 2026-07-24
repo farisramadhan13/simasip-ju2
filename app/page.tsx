@@ -44,7 +44,7 @@ export default function Home() {
   // Algoritma Pencarian Tercepat
   const searchResults = useMemo(() => {
     if (!searchQuery.trim() || !sheetsData?.results) return [];
-    
+
     // Pecah input pencarian menjadi array kata (token)
     const queryTokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
     let allResults: any[] = [];
@@ -52,7 +52,7 @@ export default function Home() {
     sheetsData.results.forEach((sheet: any) => {
       let jenis = "Tidak Diketahui";
       let jenisColor = "badge-gray";
-      
+
       if (sheet.id === "sheet-1") {
         jenis = "Surat Masuk";
         jenisColor = "badge-blue";
@@ -66,10 +66,10 @@ export default function Home() {
 
       sheet.data.forEach((row: any) => {
         const perihal = String(findValue(row, "perihal") || "").toLowerCase();
-        
+
         // Dokumen hanya lolos jika SEMUA kata yang dicari ada di dalam Perihal
         const isMatch = queryTokens.every(token => perihal.includes(token));
-        
+
         if (isMatch) {
           allResults.push({
             perihal: findValue(row, "perihal"),
@@ -87,7 +87,8 @@ export default function Home() {
   return (
     <>
       {/* Tambahan CSS Khusus untuk Fitur Search */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .search-results-container {
           background: var(--bg-primary);
           border: 1px solid var(--border-color);
@@ -181,28 +182,28 @@ export default function Home() {
                 Suku Dinas Pendidikan Wilayah II Jakarta Utara
               </div>
               <h1 className="hero-title">
-                Pencarian Cerdas Arsip <br />
-                <span className="text-gradient">Sekilat Kilat</span>
+                Monitoring Status Surat<br />
+                <span className="text-gradient">Cepat dan Lancar</span>
               </h1>
               <p className="hero-description">
-                Ketikkan kata kunci perihal dokumen. Sistem akan langsung menelusuri seluruh Surat Masuk, Surat Keluar, dan Disposisi tanpa loading.
+                Ketikkan kata kunci dokumen. Sistem akan menelusuri seluruh Surat Masuk, Surat Keluar, dan Disposisi.
               </p>
-              
+
               <div className="hero-actions" style={{ flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '850px', margin: '0 auto', marginTop: '2rem' }}>
-                
+
                 {/* Search Bar Container */}
                 <div className="search-container" style={{ width: '100%', maxWidth: '100%', boxShadow: 'var(--shadow-lg)' }}>
                   <div className="search-icon">🔍</div>
-                  <input 
-                    type="text" 
-                    placeholder="Contoh: Undangan Rapat Dinas Pendidikan..." 
+                  <input
+                    type="text"
+                    placeholder="Contoh: Undangan Rapat Dinas Pendidikan..."
                     className="search-input"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     autoFocus
                   />
                 </div>
-                
+
                 {/* Loading Indicator saat menarik seluruh data di background */}
                 {isLoadingSheets && (
                   <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem', animation: 'pulse 1.5s infinite' }}>
@@ -242,7 +243,7 @@ export default function Home() {
                       <div className="no-results">
                         <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔎</div>
                         Tidak ada arsip dengan perihal yang mengandung kata <b>"{searchQuery}"</b>.
-                        <br/><span style={{ fontSize: '0.85rem', marginTop: '0.5rem', display: 'block' }}>Coba gunakan kata kunci lain.</span>
+                        <br /><span style={{ fontSize: '0.85rem', marginTop: '0.5rem', display: 'block' }}>Coba gunakan kata kunci lain.</span>
                       </div>
                     )}
                   </div>
@@ -258,12 +259,17 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Info Tambahan */}
-        <section id="features" style={{ padding: '4rem 2rem', background: 'var(--surface)', textAlign: 'center' }}>
+        {/* Slogan Tambahan */}
+        <section id="features" style={{ padding: '5rem 2rem', background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)', textAlign: 'center', borderTop: '1px solid var(--border-color)' }}>
           <div className="container" style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Integrasi Langsung Google Sheets</h2>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Sistem Manajemen Arsip Sudindik JU 2 (SIMASIP) dirancang untuk menarik data secara <i>real-time</i> langsung dari pusat kendali Google Sheets kantor Anda. Segala perubahan yang dilakukan staf di Sheet akan langsung terindeks oleh mesin pencari ini dalam hitungan detik.
+            <div style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>✨</div>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '1.5rem', background: 'linear-gradient(135deg, var(--text-primary), var(--accent-purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Surat Terjaga dan Tertata
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8, fontSize: '1.1rem' }}>
+              Mewujudkan tata kelola persuratan yang aman dan. Temukan dokumen penting Anda.
+              <br /><br />
+              <b>SIMASIP</b> hadir untuk memastikan setiap lembar informasi terjaga dengan aman.
             </p>
           </div>
         </section>
