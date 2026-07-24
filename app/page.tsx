@@ -267,7 +267,7 @@ export default function Home() {
               Surat Terjaga dan Tertata
             </h2>
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8, fontSize: '1.1rem' }}>
-              Mewujudkan tata kelola persuratan yang aman dan. Temukan dokumen penting Anda.
+              Mewujudkan tata kelola persuratan yang aman dan temukan dokumen penting Anda.
               <br /><br />
               <b>SIMASIP</b> hadir untuk memastikan setiap lembar informasi terjaga dengan aman.
             </p>
