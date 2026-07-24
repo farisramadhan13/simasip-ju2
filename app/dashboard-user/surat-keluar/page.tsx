@@ -1,329 +1,357 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import imageCompression from "browser-image-compression";
-import CustomAlert from "@/app/components/CustomAlert";
-import CustomConfirm from "@/app/components/CustomConfirm";
-import DeleteVerificationModal from "@/app/components/DeleteVerificationModal";
+import { useState } from "react";
+import useSWR from "swr";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function SuratKeluarPage() {
-  const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Modals state
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  
-  // Custom Modals
-  const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: "", message: "", type: "info" as any });
-  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {}, pendingFile: null as File | null });
-  const [deleteModalConfig, setDeleteModalConfig] = useState({ isOpen: false, idToDelete: "" });
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Form State
-  const [formData, setFormData] = useState({
-    nomorUrut: "", tanggalKeluar: "", nomorSurat: "", perihal: "", ditujukan: "", tembusan: "",
-    keterangan: "", fileSuratUrl: "", petugas: "", status: "Draft"
+  const { data, error, isLoading } = useSWR("/api/sheets", fetcher, {
+    refreshInterval: 10000,
+    revalidateOnFocus: true,
   });
 
-  const fetchSuratKeluar = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/surat-keluar");
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
-      }
-    } catch (e) {
-      showAlert("Error", "Gagal memuat data", "error");
-    } finally {
-      setIsLoading(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+
+  const sheetData = data?.results?.find((s: any) => s.id === "sheet-2");
+  const totalItems = sheetData?.data?.length || 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = sheetData?.data?.slice(startIndex, endIndex) || [];
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = startPage + maxVisiblePages - 1;
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-  };
-
-  useEffect(() => {
-    fetchSuratKeluar();
-  }, []);
-
-  const showAlert = (title: string, message: string, type: any = "info") => {
-    setAlertConfig({ isOpen: true, title, message, type });
-  };
-
-  const resetForm = () => {
-    setFormData({
-      nomorUrut: "", tanggalKeluar: "", nomorSurat: "", perihal: "", ditujukan: "", tembusan: "",
-      keterangan: "", fileSuratUrl: "", petugas: "", status: "Draft"
-    });
-  };
-
-  const openAddModal = () => {
-    setSelectedItem(null);
-    resetForm();
-    setIsFormModalOpen(true);
-  };
-
-  const openEditModal = (item: any) => {
-    setSelectedItem(item);
-    setFormData({
-      nomorUrut: item.nomorUrut || "",
-      tanggalKeluar: item.tanggalKeluar ? new Date(item.tanggalKeluar).toISOString().split('T')[0] : "",
-      nomorSurat: item.nomorSurat || "",
-      perihal: item.perihal || "",
-      ditujukan: item.ditujukan || "",
-      tembusan: item.tembusan || "",
-      keterangan: item.keterangan || "",
-      fileSuratUrl: item.fileSuratUrl || "",
-      petugas: item.petugas || "",
-      status: item.status || "Draft"
-    });
-    setIsFormModalOpen(true);
-  };
-
-  const openDeleteModal = (id: string) => {
-    setDeleteModalConfig({ isOpen: true, idToDelete: id });
-  };
-
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`/api/surat-keluar/${deleteModalConfig.idToDelete}`, { method: "DELETE" });
-      if (res.ok) {
-        setDeleteModalConfig({ isOpen: false, idToDelete: "" });
-        showAlert("Berhasil", "Data surat keluar telah dihapus secara permanen.", "success");
-        fetchSuratKeluar();
-      } else {
-        showAlert("Gagal", "Terjadi kesalahan saat menghapus data.", "error");
-      }
-    } catch (e) {
-      showAlert("Error", "Masalah koneksi server.", "error");
-    } finally {
-      setIsDeleting(false);
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
     }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      if (file.type.startsWith("image/")) {
-        setConfirmConfig({
-          isOpen: true,
-          title: "Ukuran File Terlalu Besar",
-          message: `Ukuran gambar ${file.name} melebihi batas 5MB. Apakah Anda ingin mengizinkan sistem untuk mengompres gambar ini secara otomatis?`,
-          pendingFile: file,
-          onConfirm: () => compressAndProcessFile(file, fieldName)
-        });
-      } else {
-        showAlert("File Terlalu Besar", "Batas maksimal adalah 5MB. Untuk file PDF/Dokumen yang besar, silakan kompres sendiri terlebih dahulu sebelum diunggah.", "warning");
-        e.target.value = "";
-      }
-      return;
-    }
-    
-    processBase64(file, fieldName);
-  };
-
-  const compressAndProcessFile = async (file: File, fieldName: string) => {
-    setConfirmConfig({ ...confirmConfig, isOpen: false });
-    try {
-      showAlert("Mengompresi...", "Sistem sedang mengompresi gambar Anda...", "info");
-      const compressedFile = await imageCompression(file, { maxSizeMB: 4, maxWidthOrHeight: 1920, useWebWorker: true });
-      processBase64(compressedFile, fieldName);
-      setAlertConfig({ ...alertConfig, isOpen: false });
-    } catch (error) {
-      showAlert("Gagal", "Gagal mengompres gambar.", "error");
-    }
-  };
-
-  const processBase64 = (file: File, fieldName: string) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      setFormData(prev => ({ ...prev, [fieldName]: reader.result as string }));
-    };
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    try {
-      const isEditing = !!selectedItem;
-      const url = isEditing ? `/api/surat-keluar/${selectedItem.id}` : "/api/surat-keluar";
-      const method = isEditing ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-
-      if (res.ok) {
-        setIsFormModalOpen(false);
-        showAlert("Berhasil", `Data surat keluar berhasil ${isEditing ? 'diperbarui' : 'ditambahkan'}.`, "success");
-        fetchSuratKeluar();
-      } else {
-        showAlert("Gagal", "Mohon periksa kembali isian formulir.", "error");
-      }
-    } catch (e) {
-      showAlert("Error", "Gagal terhubung ke server.", "error");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const getStatusBadgeClass = (status: string) => {
-    switch(status) {
-      case "Draft": return "badge-danger";
-      case "Menunggu TTD Pimpinan": return "badge-warning";
-      case "Revisi": return "badge-warning";
-      case "Terkirim": return "badge-success";
-      case "Dibatalkan": return "badge-danger";
-      default: return "";
-    }
+    return pages;
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 className="page-title" style={{ margin: 0 }}>Daftar Surat Keluar</h1>
-        <button className="btn-primary" onClick={openAddModal}>+ Tambah Surat Keluar</button>
+    <div className="sm-container">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .sm-container {
+          padding: 2rem;
+          min-height: 85vh;
+          font-family: 'Inter', sans-serif;
+          animation: fadeIn 0.5s ease;
+        }
+        .sm-header {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          margin-bottom: 2.5rem;
+        }
+        @media (min-width: 768px) {
+          .sm-header {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-end;
+          }
+        }
+        .sm-title {
+          font-size: 2.2rem;
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: var(--text-primary);
+          margin: 0;
+          background: linear-gradient(135deg, var(--accent-purple), #3b82f6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .sm-subtitle {
+          color: var(--text-secondary);
+          margin-top: 0.5rem;
+          font-size: 1rem;
+        }
+        .sm-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.6rem 1.2rem;
+          border-radius: 50px;
+          background: rgba(147, 51, 234, 0.08);
+          border: 1px solid rgba(147, 51, 234, 0.2);
+          color: var(--accent-purple);
+          font-weight: 600;
+          font-size: 0.85rem;
+          backdrop-filter: blur(10px);
+        }
+        .sm-pulse {
+          width: 10px;
+          height: 10px;
+          background: var(--accent-purple);
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4); }
+          70% { box-shadow: 0 0 0 10px rgba(147, 51, 234, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); }
+        }
+        .sm-card {
+          background: var(--bg-primary);
+          border-radius: 1.5rem;
+          box-shadow: var(--shadow-lg);
+          border: 1px solid var(--border-color);
+          overflow: hidden;
+          position: relative;
+        }
+        .sm-table-wrapper {
+          max-height: 75vh;
+          overflow: auto;
+        }
+        .sm-table-wrapper::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        .sm-table-wrapper::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .sm-table-wrapper::-webkit-scrollbar-thumb {
+          background-color: var(--border-color);
+          border-radius: 10px;
+        }
+        .sm-table-wrapper::-webkit-scrollbar-thumb:hover {
+          background-color: var(--text-secondary);
+        }
+        .sm-table {
+          width: 100%;
+          min-width: max-content;
+          border-collapse: collapse;
+        }
+        .sm-table th {
+          position: sticky;
+          top: 0;
+          background: var(--surface);
+          padding: 0.75rem 1rem;
+          text-align: left;
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+          letter-spacing: 0.05em;
+          z-index: 10;
+          border-bottom: 1px solid var(--border-color);
+          backdrop-filter: blur(10px);
+        }
+        .sm-table td {
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid var(--border-color);
+          color: var(--text-primary);
+          font-size: 0.85rem;
+          vertical-align: top;
+        }
+        .sm-table tbody tr {
+          transition: var(--transition);
+        }
+        .sm-table tbody tr:hover {
+          background: var(--surface);
+          box-shadow: inset 4px 0 0 0 var(--accent-purple);
+        }
+        .sm-cell-content {
+          max-width: 280px;
+          word-break: break-word;
+          line-height: 1.5;
+        }
+        .sm-pagination {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem 2rem;
+          background: var(--surface);
+          border-top: 1px solid var(--border-color);
+        }
+        @media (min-width: 640px) {
+          .sm-pagination {
+            flex-direction: row;
+          }
+        }
+        .sm-page-info {
+          color: var(--text-secondary);
+          font-size: 0.95rem;
+        }
+        .sm-page-info b {
+          color: var(--text-primary);
+        }
+        .sm-page-controls {
+          display: flex;
+          gap: 0.5rem;
+        }
+        .sm-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 0.75rem;
+          border: 1px solid var(--border-color);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          cursor: pointer;
+          transition: var(--transition);
+          font-weight: 600;
+          font-size: 0.95rem;
+        }
+        .sm-btn:hover:not(:disabled) {
+          border-color: var(--accent-purple);
+          color: var(--accent-purple);
+          background: var(--surface);
+        }
+        .sm-btn.active {
+          background: var(--accent-purple);
+          color: #ffffff;
+          border-color: var(--accent-purple);
+          box-shadow: 0 4px 10px rgba(147, 51, 234, 0.3);
+        }
+        .sm-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+        .sm-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 400px;
+          color: var(--text-secondary);
+          gap: 1rem;
+        }
+        .sm-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid var(--border-color);
+          border-top-color: var(--accent-purple);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}} />
+
+      <div className="sm-header">
+        <div>
+          <h1 className="sm-title">Arsip Keluar</h1>
+          <p className="sm-subtitle">Pantau seluruh surat keluar secara real-time yang terhubung langsung dari Google Sheets.</p>
+        </div>
+        <div className="sm-badge">
+          <div className="sm-pulse"></div>
+          Live Sinkronisasi Aktif
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="spinner-centered"><div className="spinner"></div></div>
-      ) : (
-        <div className="data-table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>No. Surat</th>
-                <th>Perihal</th>
-                <th>Ditujukan Kepada</th>
-                <th>Tgl Keluar</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map(item => (
-                <tr key={item.id}>
-                  <td style={{ fontWeight: 500 }}>{item.nomorSurat}</td>
-                  <td>{item.perihal}</td>
-                  <td>{item.ditujukan}</td>
-                  <td>{item.tanggalKeluar ? new Date(item.tanggalKeluar).toLocaleDateString() : '-'}</td>
-                  <td>
-                    <span className={`badge ${getStatusBadgeClass(item.status)}`}>
-                      {item.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    <button className="btn-icon" onClick={() => { setSelectedItem(item); setIsDetailModalOpen(true); }} title="Detail Lengkap">👁️</button>
-                    <button className="btn-icon" onClick={() => openEditModal(item)} title="Edit">✏️</button>
-                    <button className="btn-icon btn-icon-danger" onClick={() => openDeleteModal(item.id)} title="Hapus">🗑️</button>
-                  </td>
-                </tr>
-              ))}
-              {data.length === 0 && (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Belum ada data surat keluar.</td>
-                </tr>
+      <div className="sm-card">
+        {isLoading && (
+          <div className="sm-state">
+            <div className="sm-spinner"></div>
+            <p>Menyinkronkan data...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="sm-state" style={{ color: '#ef4444' }}>
+            <p><b>Koneksi Terputus</b></p>
+            <p>Gagal memuat data. Periksa jaringan Anda.</p>
+          </div>
+        )}
+
+        {data?.success === false && (
+          <div className="sm-state" style={{ color: '#ef4444', padding: '2rem', textAlign: 'center' }}>
+            <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Gagal Mengambil Data API</p>
+            <p>{data?.error}</p>
+          </div>
+        )}
+
+        {!isLoading && !error && data?.success !== false && sheetData && (
+          <>
+            <div className="sm-table-wrapper">
+              <table className="sm-table">
+                <thead>
+                  <tr>
+                    {sheetData.data.length > 0 &&
+                      Object.keys(sheetData.data[0]).map((header, idx) => (
+                        <th key={idx}>{header}</th>
+                      ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentData.map((row: any, rowIndex: number) => (
+                    <tr key={rowIndex}>
+                      {Object.values(row).map((cell: any, cellIndex: number) => (
+                        <td key={cellIndex}>
+                          <div className="sm-cell-content">
+                            {cell || <span style={{ opacity: 0.5 }}>-</span>}
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                  {currentData.length === 0 && (
+                    <tr>
+                      <td colSpan={100} style={{ textAlign: 'center', padding: '5rem 0', color: 'var(--text-secondary)' }}>
+                        Tidak ada data surat keluar.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="sm-pagination">
+              <div className="sm-page-info">
+                Menampilkan <b>{startIndex + 1}</b> hingga <b>{Math.min(endIndex, totalItems)}</b> dari <b>{totalItems}</b> data
+              </div>
+              
+              {totalPages > 1 && (
+                <div className="sm-page-controls">
+                  <button
+                    className="sm-btn"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    &lt;
+                  </button>
+                  
+                  {getPageNumbers().map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setCurrentPage(num)}
+                      className={`sm-btn ${currentPage === num ? "active" : ""}`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+
+                  <button
+                    className="sm-btn"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    &gt;
+                  </button>
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Form Modal (Tambah/Edit) */}
-      {isFormModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 50 }}>
-          <div className="modal-content" style={{ maxWidth: '800px' }}>
-            <div className="modal-header">
-              <h2>{selectedItem ? "Edit Surat Keluar" : "Tambah Surat Keluar Baru"}</h2>
-              <button onClick={() => setIsFormModalOpen(false)} className="btn-icon">✖</button>
             </div>
-            <form onSubmit={handleSave}>
-              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', maxHeight: '65vh', overflowY: 'auto' }}>
-                
-                {/* Kolom Kiri */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div className="form-group"><label className="form-label">Nomor Urut</label><input type="text" className="form-input" required value={formData.nomorUrut} onChange={e => setFormData({...formData, nomorUrut: e.target.value})} /></div>
-                  <div className="form-group"><label className="form-label">Tanggal Keluar</label><input type="date" className="form-input" required value={formData.tanggalKeluar} onChange={e => setFormData({...formData, tanggalKeluar: e.target.value})} /></div>
-                  <div className="form-group"><label className="form-label">Nomor Surat</label><input type="text" className="form-input" required value={formData.nomorSurat} onChange={e => setFormData({...formData, nomorSurat: e.target.value})} /></div>
-                  <div className="form-group"><label className="form-label">Perihal</label><textarea className="form-input" required value={formData.perihal} onChange={e => setFormData({...formData, perihal: e.target.value})} /></div>
-                  <div className="form-group"><label className="form-label">Ditujukan Kepada</label><input type="text" className="form-input" required value={formData.ditujukan} onChange={e => setFormData({...formData, ditujukan: e.target.value})} /></div>
-                </div>
-
-                {/* Kolom Kanan */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div className="form-group"><label className="form-label">Tembusan</label><input type="text" className="form-input" value={formData.tembusan} onChange={e => setFormData({...formData, tembusan: e.target.value})} /></div>
-                  <div className="form-group"><label className="form-label">Keterangan Tambahan</label><textarea className="form-input" value={formData.keterangan} onChange={e => setFormData({...formData, keterangan: e.target.value})} /></div>
-                  <div className="form-group"><label className="form-label">Petugas Pencatat</label><input type="text" className="form-input" required value={formData.petugas} onChange={e => setFormData({...formData, petugas: e.target.value})} /></div>
-                  <div className="form-group">
-                    <label className="form-label">File Surat (Maks 5MB)</label>
-                    <input type="file" className="form-input" onChange={e => handleFileUpload(e, "fileSuratUrl")} accept="image/*,application/pdf" />
-                    {formData.fileSuratUrl && <small style={{ color: 'var(--accent-purple)' }}>File tersimpan.</small>}
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Status Penanganan</label>
-                    <select className="form-input" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
-                      <option value="Draft">Draft</option>
-                      <option value="Menunggu TTD Pimpinan">Menunggu TTD Pimpinan</option>
-                      <option value="Revisi">Revisi</option>
-                      <option value="Terkirim">Terkirim</option>
-                      <option value="Dibatalkan">Dibatalkan</option>
-                    </select>
-                  </div>
-                </div>
-
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setIsFormModalOpen(false)}>Batal</button>
-                <button type="submit" className={`btn-primary ${isSaving ? 'btn-loading' : ''}`} disabled={isSaving}>
-                  {isSaving ? "Menyimpan..." : "Simpan Data"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Detail Modal */}
-      {isDetailModalOpen && selectedItem && (
-        <div className="modal-overlay" style={{ zIndex: 40 }}>
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
-            <div className="modal-header">
-              <h2>Detail Surat Keluar: {selectedItem.nomorSurat}</h2>
-              <button onClick={() => setIsDetailModalOpen(false)} className="btn-icon">✖</button>
-            </div>
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '60vh', overflowY: 'auto' }}>
-              <div className="detail-group"><span className="detail-label">1. Nomor Urut</span><div className="detail-value">{selectedItem.nomorUrut}</div></div>
-              <div className="detail-group"><span className="detail-label">2. Tanggal Keluar</span><div className="detail-value">{selectedItem.tanggalKeluar ? new Date(selectedItem.tanggalKeluar).toLocaleDateString() : '-'}</div></div>
-              <div className="detail-group"><span className="detail-label">3. Nomor Surat</span><div className="detail-value">{selectedItem.nomorSurat}</div></div>
-              <div className="detail-group"><span className="detail-label">4. Perihal</span><div className="detail-value">{selectedItem.perihal}</div></div>
-              <div className="detail-group"><span className="detail-label">5. Ditujukan Kepada</span><div className="detail-value">{selectedItem.ditujukan}</div></div>
-              <div className="detail-group"><span className="detail-label">6. Tembusan</span><div className="detail-value">{selectedItem.tembusan || "-"}</div></div>
-              <div className="detail-group"><span className="detail-label">7. Keterangan</span><div className="detail-value">{selectedItem.keterangan || "-"}</div></div>
-              <div className="detail-group">
-                <span className="detail-label">8. File Surat</span>
-                <div className="detail-value">{selectedItem.fileSuratUrl ? <a href={selectedItem.fileSuratUrl} download="File_Surat_Keluar" style={{ color: 'var(--accent-purple)' }}>Unduh/Lihat File 📄</a> : "-"}</div>
-              </div>
-              <div className="detail-group"><span className="detail-label">9. Petugas</span><div className="detail-value">{selectedItem.petugas}</div></div>
-              <div className="detail-group">
-                <span className="detail-label">10. Status</span>
-                <div className="detail-value"><span className={`badge ${getStatusBadgeClass(selectedItem.status)}`}>{selectedItem.status.toUpperCase()}</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <CustomAlert {...alertConfig} onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })} />
-      <CustomConfirm {...confirmConfig} onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })} />
-      <DeleteVerificationModal isOpen={deleteModalConfig.isOpen} isDeleting={isDeleting} onCancel={() => setDeleteModalConfig({ isOpen: false, idToDelete: "" })} onConfirm={handleDelete} />
+          </>
+        )}
+      </div>
     </div>
   );
 }

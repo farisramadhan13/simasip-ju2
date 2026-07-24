@@ -182,6 +182,11 @@ a {
 
 .hero-content {
   max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .badge {
@@ -630,6 +635,8 @@ a {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-width: 0; /* Crucial for preventing flex children from overflowing */
+  overflow-x: hidden;
 }
 
 .dashboard-header {
@@ -680,19 +687,83 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 40;
 }
 
 .dashboard-content {
   padding: 2rem;
   flex: 1;
+  min-width: 0;
+  max-width: 100vw;
+}
+
+/* Dashboard Responsive Layouts */
+.mobile-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-right: 1rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .dashboard-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .dashboard-main {
+    margin-left: 0;
+  }
+
+  .mobile-toggle {
+    display: block;
+  }
+
+  .dashboard-header {
+    padding: 0 1rem;
+  }
+
+  .dashboard-content {
+    padding: 1rem;
+  }
+
+  .header-user .user-info {
+    display: none;
+  }
 }
 
 .page-title {
   font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0; /* Margin dipindah ke page-header */
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+  .page-header .btn-primary {
+    width: 100%;
+  }
 }
 
 /* Stat Cards */
@@ -864,6 +935,31 @@ a {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
+  /* Mencegah teks terlalu panjang merusak tabel */
+  max-width: 350px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary); 
+  border-radius: 10px;
+}
+ 
+::-webkit-scrollbar-thumb {
+  background: rgba(147, 51, 234, 0.4); 
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(147, 51, 234, 0.7); 
 }
 
 .data-table tbody tr:hover {
@@ -1000,4 +1096,101 @@ a {
 .badge-success {
   background-color: rgba(16, 185, 129, 0.1);
   color: #10b981;
+}
+
+/* Tracking Search Bar on Landing Page */
+.search-container {
+  display: flex;
+  width: 100%;
+  gap: 0.5rem;
+  background: var(--surface);
+  padding: 0.5rem;
+  border-radius: 50px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  align-items: center;
+}
+
+.search-icon {
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  color: var(--text-secondary);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0.5rem;
+  min-width: 0;
+  text-align: center;
+}
+
+.search-button {
+  border-radius: 50px;
+  padding: 0.75rem 2rem;
+  white-space: nowrap;
+}
+
+/* Responsive adjustments for the search bar */
+@media (max-width: 600px) {
+  .search-container {
+    flex-direction: column;
+    border-radius: 1rem;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .search-icon {
+    display: none;
+  }
+  
+  .search-input {
+    width: 100%;
+    text-align: center;
+    font-size: 1.125rem;
+  }
+  
+  .search-button {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .hero {
+    padding: 120px 0 60px;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-description {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .navbar {
+    height: 70px;
+  }
+  
+  .logo {
+    font-size: 1.1rem;
+  }
+  
+  .btn-primary, .btn-secondary {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
 }
