@@ -50,19 +50,8 @@ export default function Home() {
     let allResults: any[] = [];
 
     sheetsData.results.forEach((sheet: any) => {
-      let jenis = "Tidak Diketahui";
-      let jenisColor = "badge-gray";
-
-      if (sheet.id === "sheet-1") {
-        jenis = "Surat Masuk";
-        jenisColor = "badge-blue";
-      } else if (sheet.id === "sheet-2") {
-        jenis = "Surat Keluar";
-        jenisColor = "badge-yellow";
-      } else if (sheet.id === "sheet-3") {
-        jenis = "Disposisi";
-        jenisColor = "badge-purple";
-      }
+      // Sesuai permintaan, pencarian hanya dibatasi pada Google Sheet 1 (Surat Masuk)
+      if (sheet.id !== "sheet-1") return;
 
       sheet.data.forEach((row: any) => {
         const perihal = String(findValue(row, "perihal") || "").toLowerCase();
@@ -72,10 +61,9 @@ export default function Home() {
 
         if (isMatch) {
           allResults.push({
+            kode: findValue(row, "no"), // Ambil dari kolom NO
             perihal: findValue(row, "perihal"),
-            status: findValue(row, "status"),
-            jenis,
-            jenisColor
+            status: findValue(row, "status")
           });
         }
       });
@@ -219,13 +207,17 @@ export default function Home() {
                         <table className="results-table">
                           <thead>
                             <tr>
-                              <th style={{ width: '70%' }}>Perihal</th>
-                              <th style={{ width: '30%' }}>Status</th>
+                              <th style={{ width: '15%' }}>Kode</th>
+                              <th style={{ width: '60%' }}>Perihal</th>
+                              <th style={{ width: '25%' }}>Status</th>
                             </tr>
                           </thead>
                           <tbody>
                             {searchResults.map((res, i) => (
                               <tr key={i}>
+                                <td>
+                                  <span style={{ fontWeight: 600, color: 'var(--accent-purple)' }}>{res.kode}</span>
+                                </td>
                                 <td>{res.perihal}</td>
                                 <td>
                                   <span style={{ fontWeight: 500 }}>{res.status}</span>
