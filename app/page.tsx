@@ -219,18 +219,14 @@ export default function Home() {
                         <table className="results-table">
                           <thead>
                             <tr>
-                              <th style={{ width: '50%' }}>Perihal</th>
-                              <th style={{ width: '25%' }}>Jenis Arsip</th>
-                              <th style={{ width: '25%' }}>Status</th>
+                              <th style={{ width: '70%' }}>Perihal</th>
+                              <th style={{ width: '30%' }}>Status</th>
                             </tr>
                           </thead>
                           <tbody>
                             {searchResults.map((res, i) => (
                               <tr key={i}>
                                 <td>{res.perihal}</td>
-                                <td>
-                                  <span className={`search-badge ${res.jenisColor}`}>{res.jenis}</span>
-                                </td>
                                 <td>
                                   <span style={{ fontWeight: 500 }}>{res.status}</span>
                                 </td>
